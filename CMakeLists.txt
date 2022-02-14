@@ -39,7 +39,7 @@ catkin_package(
   INCLUDE_DIRS include
 )
 
-set(OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR})
+set(OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/build)
 
 # add_executable(PublishLidarData src/PublishLidarData.cpp)
 # target_link_libraries(PublishLidarData glog ${catkin_LIBRARIES})

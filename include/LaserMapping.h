@@ -67,4 +67,6 @@ public:
 	Eigen::Quaterniond q_wodom_curr = Eigen::Quaterniond(1, 0, 0, 0);
 	Eigen::Vector3d t_wodom_curr = Eigen::Vector3d(0, 0, 0);
 
+	
+
 };

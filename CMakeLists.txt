@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   # std_msgs
   # visualization_msgs
-  # roscpp
+  roscpp
   # rospy
   # rosbag
   # image_transport
@@ -34,23 +34,22 @@ include_directories(
 )
 
 catkin_package(
-  CATKIN_DEPENDS geometry_msgs nav_msgs sensor_msgs
+  CATKIN_DEPENDS geometry_msgs nav_msgs sensor_msgs roscpp
   DEPENDS EIGEN3  
   INCLUDE_DIRS include
 )
 
+add_library(aloam_library
+PublishLidarData.cpp 
+ScanRegistration.cpp
+LaserMapping.cpp
+utils.cpp)
+
+target_link_libraries(aloam_library glog ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES})
+
 set(OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/build)
 
-# add_executable(PublishLidarData src/PublishLidarData.cpp)
-# target_link_libraries(PublishLidarData glog ${catkin_LIBRARIES})
-
-# add_executable(ascanRegistration src/scanRegistration.cpp)
-# target_link_libraries(ascanRegistration ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-
-# add_executable(alaserMapping src/laserMapping.cpp)
-# target_link_libraries(alaserMapping ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES})
-
 add_executable(main_test main_test.cpp)
-target_link_libraries(main_test glog ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES})
+target_link_libraries(main_test glog ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} aloam_library)
 
 set_target_properties(main_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})

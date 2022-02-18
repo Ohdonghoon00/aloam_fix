@@ -2,7 +2,7 @@
 
 #include "common.h"
 #include "utils.h"
-#include "lidarFactor.hpp"
+#include "../lidarFactor.hpp"
 #include "ScanRegistration.h"
 
 #include <pcl_conversions/pcl_conversions.h>
@@ -20,7 +20,29 @@ class LaserMapping{
 public:
 
 	LaserMapping()
-	{}
+	{
+		laserCloudCornerLast.reset(new pcl::PointCloud<PointType>());
+		laserCloudSurfLast.reset(new pcl::PointCloud<PointType>());
+		laserCloudFullRes.reset(new pcl::PointCloud<PointType>());
+
+		laserCloudSurround.reset(new pcl::PointCloud<PointType>());
+
+		laserCloudCornerFromMap.reset(new pcl::PointCloud<PointType>());
+		laserCloudSurfFromMap.reset(new pcl::PointCloud<PointType>());
+
+		kdtreeCornerFromMap.reset(new pcl::KdTreeFLANN<PointType>());
+		kdtreeSurfFromMap.reset(new pcl::KdTreeFLANN<PointType>());
+
+		downSizeFilterCorner.setLeafSize(0.2, 0.2,0.2);
+		downSizeFilterSurf.setLeafSize(0.4, 0.4, 0.4);
+
+		laserCloudCornerStack.reset(new pcl::PointCloud<PointType>());
+		laserCloudSurfStack.reset(new pcl::PointCloud<PointType>());
+		
+	}
+
+	void Topcl(ScanRegistration S);
+	void LoadOdomData(Vector6d pose);
 
 	// set initial guess
 	void transformAssociateToMap();
@@ -28,6 +50,16 @@ public:
 
 	void pointAssociateToMap(PointType const *const pi, PointType *const po);
 	void pointAssociateTobeMapped(PointType const *const pi, PointType *const po);
+
+	void hoho();
+	void SaveLastMap();
+	void DownSizeFiltering();
+
+	// optimize ////
+	///////////////
+
+	void pupu();
+	void DownSize();
 
 
 
@@ -46,11 +78,11 @@ public:
 	int laserCloudCenWidth = 10;
 	int laserCloudCenHeight = 10;
 	int laserCloudCenDepth = 5;
-	const int laserCloudWidth = 21;
-	const int laserCloudHeight = 21;
-	const int laserCloudDepth = 11;
+	const static int laserCloudWidth = 21;
+	const static int laserCloudHeight = 21;
+	const static int laserCloudDepth = 11;
 
-	const int laserCloudNum = laserCloudWidth * laserCloudHeight * laserCloudDepth; //4851
+	const static int laserCloudNum = laserCloudWidth * laserCloudHeight * laserCloudDepth; //4851
 
 	int laserCloudValidInd[125];
 	int laserCloudSurroundInd[125];
@@ -67,6 +99,49 @@ public:
 	Eigen::Quaterniond q_wodom_curr = Eigen::Quaterniond(1, 0, 0, 0);
 	Eigen::Vector3d t_wodom_curr = Eigen::Vector3d(0, 0, 0);
 
+	// input: from odom
+	pcl::PointCloud<PointType>::Ptr laserCloudCornerLast;
+	pcl::PointCloud<PointType>::Ptr laserCloudSurfLast;
 	
+	//input & output: points in one frame. local --> global
+	pcl::PointCloud<PointType>::Ptr laserCloudFullRes;
+
+	// ouput: all visualble cube points
+	pcl::PointCloud<PointType>::Ptr laserCloudSurround;
+
+	// surround points in map to build tree
+	pcl::PointCloud<PointType>::Ptr laserCloudCornerFromMap;
+	pcl::PointCloud<PointType>::Ptr laserCloudSurfFromMap;
+
+
+	// points in every cube
+	pcl::PointCloud<PointType>::Ptr laserCloudCornerArray[laserCloudNum];
+	pcl::PointCloud<PointType>::Ptr laserCloudSurfArray[laserCloudNum];
+
+	//kd-tree
+	pcl::KdTreeFLANN<PointType>::Ptr kdtreeCornerFromMap;
+	pcl::KdTreeFLANN<PointType>::Ptr kdtreeSurfFromMap;
+
+	pcl::VoxelGrid<PointType> downSizeFilterCorner;
+	pcl::VoxelGrid<PointType> downSizeFilterSurf;
+
+	std::vector<int> pointSearchInd;
+	std::vector<float> pointSearchSqDis;
+
+	PointType pointOri, pointSel;
+
+
+	int laserCloudValidNum = 0;
+	int laserCloudSurroundNum = 0;
+
+	int laserCloudCornerFromMapNum = 0;
+	int laserCloudSurfFromMapNum = 0;
+
+	int laserCloudCornerStackNum = 0;
+	int laserCloudSurfStackNum = 0;
+
+	pcl::PointCloud<PointType>::Ptr laserCloudCornerStack;
+	pcl::PointCloud<PointType>::Ptr laserCloudSurfStack;
+
 
 };

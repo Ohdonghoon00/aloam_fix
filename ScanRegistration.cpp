@@ -1,6 +1,8 @@
 #include "ScanRegistration.h"
+#include "utils.h"
 
-
+// bool ScanRegistration::comp(int i, int j) { return (cloudCurvature[i]<cloudCurvature[j]); }
+// bool ScanRegistration::SameLeaf(int i, int j) { return (LeafIds[i] < LeafIds[j]); }
 // bool ScanRegistration::comp(int i, int j) { return (cloudCurvature[i]<cloudCurvature[j]); }
 // bool ScanRegistration::SameLeaf(int i, int j) { return (LeafIds[i] < LeafIds[j]); }
 
@@ -176,9 +178,7 @@ void ScanRegistration::DividePointsByChannel( const std::vector<Eigen::Vector3d>
     // }
 }
 
-void ScanRegistration::SetPointCloudAndDistance( 
-                                std::vector<Eigen::Vector3d> *laserCloud, 
-                                std::vector<double> *PointRange)
+void ScanRegistration::SetPointCloudAndDistance(std::vector<double> *PointRange)
 {
     scanStartInd.resize(N_SCANS);
     scanEndInd.resize(N_SCANS);
@@ -186,18 +186,18 @@ void ScanRegistration::SetPointCloudAndDistance(
     int idx = 0;
     for (int i = 0; i < N_SCANS; i++)
     { 
-        scanStartInd[i] = laserCloud->size() + 5;
+        scanStartInd[i] = laserCloud.size() + 5;
         for(int j = 0; j < laserCloudScans[i].cols(); j++){
-            laserCloud->resize(idx + 1);
+            laserCloud.resize(idx + 1);
             Eigen::Vector3d p;
             p << laserCloudScans[i](0, j), laserCloudScans[i](1, j), laserCloudScans[i](2, j);
-            (*laserCloud)[idx] = p;
-            PointRange->push_back(PointDistance((*laserCloud)[idx]));
+            laserCloud[idx] = p;
+            PointRange->push_back(PointDistance(laserCloud[idx]));
             idx++;
         //     // std::cout << PointDistance(laserCloud[idx]) << std::endl;
         }
 
-        scanEndInd[i] = laserCloud->size() - 6;
+        scanEndInd[i] = laserCloud.size() - 6;
         // std::cout << " start index : " << scanStartInd[i] << " end index : " << scanEndInd[i] << std::endl;
     }
 }
@@ -218,8 +218,7 @@ void ScanRegistration::CalculateCurvature(const std::vector<double>& PointRange)
     }
 }
 
-void ScanRegistration::MarkOccludedPoints(const std::vector<Eigen::Vector3d>& laserCloud, 
-                        const std::vector<double>& PointRange)
+void ScanRegistration::MarkOccludedPoints(const std::vector<double>& PointRange)
 {
     // Occluded and Parallel beam
     int occluded_cnt = 0;
@@ -268,16 +267,13 @@ void ScanRegistration::MarkOccludedPoints(const std::vector<Eigen::Vector3d>& la
 
 }
 
-void ScanRegistration::DividePointsByEdgeAndPlanePoints(const std::vector<Eigen::Vector3d>& laserCloud)
+void ScanRegistration::DividePointsByEdgeAndPlanePoints()
 {
 
     cornerPointsSharp.clear();
     cornerPointsLessSharp.clear();
     surfPointsFlat.clear();
     surfPointsLessFlat.clear();
-    
-    //test
-    // CornerPointByChannel.clear();
     
     // Edge Points and Plane Points
     for (int i = 0; i < N_SCANS; i++)
@@ -305,22 +301,11 @@ void ScanRegistration::DividePointsByEdgeAndPlanePoints(const std::vector<Eigen:
                         cloudLabel[ind] = 2;
                         cornerPointsSharp.push_back(laserCloud[ind]);
                         cornerPointsLessSharp.push_back(laserCloud[ind]);
-                        // int indbyscan = LaserCloudIdxToScanIdx(ind, FeatureNumByScan);
-                        // PointIndexByChannel[i][indbyscan] = 0;
-
-                        // test
-                        // (*CornerPointByChannel)[i].push_back(laserCloud[ind]);
-                        
-            
+                                   
                     }
                     else if (largestPickedNum <= 20){                        
                         cloudLabel[ind] = 1; 
                         cornerPointsLessSharp.push_back(laserCloud[ind]);
-                        // int indbyscan = LaserCloudIdxToScanIdx(ind, FeatureNumByScan);
-                        // PointIndexByChannel[i][indbyscan] = 0;
-
-                        // test
-                        // (*CornerPointByChannel)[i].push_back(laserCloud[ind]);
 
                     }
                     else
@@ -361,15 +346,10 @@ void ScanRegistration::DividePointsByEdgeAndPlanePoints(const std::vector<Eigen:
                 {
                     cloudLabel[ind] = -1; 
                     surfPointsFlat.push_back(laserCloud[ind]);
-                    // RefefrencePlanePointTest
-                    // int indbyscan = LaserCloudIdxToScanIdx(ind, FeatureNumByScan);
-                    // PointIndexByChannel[i][indbyscan] = 1;
-
 
                     smallestPickedNum++;
                     if (smallestPickedNum >= 10)
-                        break;
-                    
+                        break;                   
 
                     cloudNeighborPicked[ind] = 1;
                     for (int l = 1; l <= 5; l++){ 
@@ -392,13 +372,8 @@ void ScanRegistration::DividePointsByEdgeAndPlanePoints(const std::vector<Eigen:
             for (int k = sp; k <= ep; k++){
                 if (cloudLabel[k] <= 0){
 
-                    int Scanid_ = 0;
-
                     //downsize test
                     surfPointsLessFlatScan.push_back(laserCloud[k]);
-
-                    // int indbyscan = LaserCloudIdxToScanIdx(k, FeatureNumByScan, &Scanid_);
-                    // PointIndexByChannel[Scanid_][indbyscan] = 1;
 
                 }
             }

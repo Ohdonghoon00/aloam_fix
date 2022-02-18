@@ -18,8 +18,8 @@ public:
     {}
 
     // Sort
-    bool comp(int i, int j) { return (cloudCurvature[i]<cloudCurvature[j]); }
-    bool SameLeaf(int i, int j) { return (LeafIds[i] < LeafIds[j]); }
+    bool comp(int i, int j){ return (cloudCurvature[i]<cloudCurvature[j]); }
+    bool SameLeaf(int i, int j){ return (LeafIds[i] < LeafIds[j]); }
 
     // DownsizeFiltering
     void getMinMax(std::vector< Eigen::Vector3d > &inCloud, Eigen::Vector3d &minp, Eigen::Vector3d &maxp);
@@ -33,18 +33,16 @@ public:
     void DividePointsByChannel( const std::vector<Eigen::Vector3d>& laserPoints);
 
 
-    void SetPointCloudAndDistance( 
-                                    std::vector<Eigen::Vector3d> *laserCloud, 
-                                    std::vector<double> *PointRange);
+    void SetPointCloudAndDistance(std::vector<double> *PointRange);
+                                     
         
     void CalculateCurvature(const std::vector<double>& PointRange);
 
 
-    void MarkOccludedPoints(const std::vector<Eigen::Vector3d>& laserCloud, 
-                            const std::vector<double>& PointRange);
+    void MarkOccludedPoints(const std::vector<double>& PointRange);
 
     // Sort Lidar Points by Corner and Flat Points
-    void DividePointsByEdgeAndPlanePoints(const std::vector<Eigen::Vector3d>& laserCloud);
+    void DividePointsByEdgeAndPlanePoints();
 
 public:
     
@@ -62,6 +60,7 @@ public:
     std::vector<Eigen::Vector3d> cornerPointsLessSharp;
     std::vector<Eigen::Vector3d> surfPointsFlat;
     std::vector<Eigen::Vector3d> surfPointsLessFlat;
+    std::vector<Eigen::Vector3d> laserCloud;
 
     // downsize leaf
     std::vector<int> LeafIds;

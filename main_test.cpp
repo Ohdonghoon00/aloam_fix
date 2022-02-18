@@ -33,6 +33,8 @@ ScanRegistration ScanRegistration;
 LaserMapping LaserMapping;
 
 
+
+
 int main(int argc, char** argv)
 {
     std::string data_dir = argv[1];
@@ -73,45 +75,48 @@ int main(int argc, char** argv)
         ScanRegistration.DividePointsByChannel(TotalPointCloud);
 
         // Total lasercloud and point distance
-        std::vector<Eigen::Vector3d> laserCloud;
+        
         std::vector<double> PointRange;
-        ScanRegistration.SetPointCloudAndDistance(&laserCloud, &PointRange);
+        ScanRegistration.SetPointCloudAndDistance(&PointRange);
 
         // Caculate Curvature and Mark Occluded and Parallel Points    
         ScanRegistration.CalculateCurvature(PointRange);
-        ScanRegistration.MarkOccludedPoints(laserCloud, PointRange);
+        ScanRegistration.MarkOccludedPoints(PointRange);
 
         // sort Lidar points to edge and plane
-        ScanRegistration.DividePointsByEdgeAndPlanePoints(laserCloud);
+        ScanRegistration.DividePointsByEdgeAndPlanePoints();
 
         // print corner and flat num
-        std::cout << "Total laserCloud num : " << laserCloud.size() << std::endl;
+        std::cout << "Total laserCloud num : " << ScanRegistration.laserCloud.size() << std::endl;
         std::cout << "cornerPointsSharp num : " << ScanRegistration.cornerPointsSharp.size() << std::endl;
         std::cout << "cornerPointsLessSharp num : " << ScanRegistration.cornerPointsLessSharp.size() << std::endl;
         std::cout << "surfPointsFlat num : " << ScanRegistration.surfPointsFlat.size() << std::endl;
         std::cout << "surfPointsLessFlat num : " << ScanRegistration.surfPointsLessFlat.size() << std::endl;        
 
         ///////////////////// Laser Mapping ////////////////////////////
+        
+        LaserMapping.Topcl(ScanRegistration);
+        LaserMapping.LoadOdomData(DB.VIOLidarPoses[LidarFrameNum]);
+        LaserMapping.transformAssociateToMap();
+
+        LaserMapping.hoho();
+        LaserMapping.SaveLastMap();
+        LaserMapping.DownSizeFiltering();
+
+        /// optimize /////
+
+        //////////////////
+
+        LaserMapping.transformUpdate();
+        LaserMapping.pupu();
+        LaserMapping.DownSize();
 
 
-
-
+        // Visuzlize
 
 
         LidarFrameNum++;
     }
-
-    
-
-
-
-
-
-    // parameter.h -> 공통으로 쓰이는 파라미터들 정리
-    // ScanRegistration.h -> 여기서 쓰이는 함수들?
-    // LaserMapping.h
-    // Common.h
-    // lidarFactor.hpp
 
     return 0;
 }

@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package>
-  <name>aloam</name>
+  <name>fix_aloam</name>
   <version>0.0.0</version>
 
   <description>
-    a-loam 
+    fix_aloam 
   </description>
 
   <maintainer email="qintonguav@gmail.com">qintong</maintainer>

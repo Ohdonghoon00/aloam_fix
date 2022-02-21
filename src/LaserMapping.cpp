@@ -334,9 +334,187 @@ void LaserMapping::DownSizeFiltering()
 
 
 ////optimize/////
-void LaserMapping::Optimize()
+void LaserMapping::OptimizePose()
 {
-	
+	if (laserCloudCornerFromMapNum > 10 && laserCloudSurfFromMapNum > 50)
+	{
+
+		kdtreeCornerFromMap->setInputCloud(laserCloudCornerFromMap);
+		kdtreeSurfFromMap->setInputCloud(laserCloudSurfFromMap);
+		//printf("build tree time %f ms \n", t_tree.toc());
+
+		for (int iterCount = 0; iterCount < 2; iterCount++)
+		{
+			//ceres::LossFunction *loss_function = NULL;
+			ceres::LossFunction *loss_function = new ceres::HuberLoss(0.1);
+			ceres::LocalParameterization *q_parameterization =
+				new ceres::EigenQuaternionParameterization();
+			ceres::Problem::Options problem_options;
+
+			ceres::Problem problem(problem_options);
+			problem.AddParameterBlock(parameters, 4, q_parameterization);
+			problem.AddParameterBlock(parameters + 4, 3);
+
+			// TicToc t_data;
+			int corner_num = 0;
+
+			for (int i = 0; i < laserCloudCornerStackNum; i++)
+			{
+				pointOri = laserCloudCornerStack->points[i];
+				//double sqrtDis = pointOri.x * pointOri.x + pointOri.y * pointOri.y + pointOri.z * pointOri.z;
+				pointAssociateToMap(&pointOri, &pointSel);
+				kdtreeCornerFromMap->nearestKSearch(pointSel, 5, pointSearchInd, pointSearchSqDis); 
+
+				if (pointSearchSqDis[4] < 1.0)
+				{ 
+					std::vector<Eigen::Vector3d> nearCorners;
+					Eigen::Vector3d center(0, 0, 0);
+					for (int j = 0; j < 5; j++)
+					{
+						Eigen::Vector3d tmp(laserCloudCornerFromMap->points[pointSearchInd[j]].x,
+											laserCloudCornerFromMap->points[pointSearchInd[j]].y,
+											laserCloudCornerFromMap->points[pointSearchInd[j]].z);
+						center = center + tmp;
+						nearCorners.push_back(tmp);
+					}
+					center = center / 5.0;
+
+					Eigen::Matrix3d covMat = Eigen::Matrix3d::Zero();
+					for (int j = 0; j < 5; j++)
+					{
+						Eigen::Matrix<double, 3, 1> tmpZeroMean = nearCorners[j] - center;
+						covMat = covMat + tmpZeroMean * tmpZeroMean.transpose();
+					}
+
+					Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> saes(covMat);
+
+					// if is indeed line feature
+					// note Eigen library sort eigenvalues in increasing order
+					Eigen::Vector3d unit_direction = saes.eigenvectors().col(2);
+					Eigen::Vector3d curr_point(pointOri.x, pointOri.y, pointOri.z);
+					if (saes.eigenvalues()[2] > 3 * saes.eigenvalues()[1])
+					{ 
+						Eigen::Vector3d point_on_line = center;
+						Eigen::Vector3d point_a, point_b;
+						point_a = 0.1 * unit_direction + point_on_line;
+						point_b = -0.1 * unit_direction + point_on_line;
+
+						ceres::CostFunction *cost_function = LidarEdgeFactor::Create(curr_point, point_a, point_b, 1.0);
+						problem.AddResidualBlock(cost_function, loss_function, parameters, parameters + 4);
+						corner_num++;	
+					}							
+				}
+				/*
+				else if(pointSearchSqDis[4] < 0.01 * sqrtDis)
+				{
+					Eigen::Vector3d center(0, 0, 0);
+					for (int j = 0; j < 5; j++)
+					{
+						Eigen::Vector3d tmp(laserCloudCornerFromMap->points[pointSearchInd[j]].x,
+											laserCloudCornerFromMap->points[pointSearchInd[j]].y,
+											laserCloudCornerFromMap->points[pointSearchInd[j]].z);
+						center = center + tmp;
+					}
+					center = center / 5.0;	
+					Eigen::Vector3d curr_point(pointOri.x, pointOri.y, pointOri.z);
+					ceres::CostFunction *cost_function = LidarDistanceFactor::Create(curr_point, center);
+					problem.AddResidualBlock(cost_function, loss_function, parameters, parameters + 4);
+				}
+				*/
+			}
+
+			int surf_num = 0;
+			for (int i = 0; i < laserCloudSurfStackNum; i++)
+			{
+				pointOri = laserCloudSurfStack->points[i];
+				//double sqrtDis = pointOri.x * pointOri.x + pointOri.y * pointOri.y + pointOri.z * pointOri.z;
+				pointAssociateToMap(&pointOri, &pointSel);
+				kdtreeSurfFromMap->nearestKSearch(pointSel, 5, pointSearchInd, pointSearchSqDis);
+
+				Eigen::Matrix<double, 5, 3> matA0;
+				Eigen::Matrix<double, 5, 1> matB0 = -1 * Eigen::Matrix<double, 5, 1>::Ones();
+				if (pointSearchSqDis[4] < 1.0)
+				{
+							
+					for (int j = 0; j < 5; j++)
+					{
+						matA0(j, 0) = laserCloudSurfFromMap->points[pointSearchInd[j]].x;
+						matA0(j, 1) = laserCloudSurfFromMap->points[pointSearchInd[j]].y;
+						matA0(j, 2) = laserCloudSurfFromMap->points[pointSearchInd[j]].z;
+						////printf(" pts %f %f %f ", matA0(j, 0), matA0(j, 1), matA0(j, 2));
+					}
+					// find the norm of plane
+					Eigen::Vector3d norm = matA0.colPivHouseholderQr().solve(matB0);
+					double negative_OA_dot_norm = 1 / norm.norm();
+					norm.normalize();
+
+					// Here n(pa, pb, pc) is unit norm of plane
+					bool planeValid = true;
+					for (int j = 0; j < 5; j++)
+					{
+						// if OX * n > 0.2, then plane is not fit well
+						if (fabs(norm(0) * laserCloudSurfFromMap->points[pointSearchInd[j]].x +
+								norm(1) * laserCloudSurfFromMap->points[pointSearchInd[j]].y +
+								norm(2) * laserCloudSurfFromMap->points[pointSearchInd[j]].z + negative_OA_dot_norm) > 0.2)
+						{
+							planeValid = false;
+							break;
+						}
+					}
+					Eigen::Vector3d curr_point(pointOri.x, pointOri.y, pointOri.z);
+					if (planeValid)
+					{
+						ceres::CostFunction *cost_function = LidarPlaneNormFactor::Create(curr_point, norm, negative_OA_dot_norm);
+					problem.AddResidualBlock(cost_function, loss_function, parameters, parameters + 4);
+						surf_num++;
+					}
+				}
+				/*
+				else if(pointSearchSqDis[4] < 0.01 * sqrtDis)
+				{
+					Eigen::Vector3d center(0, 0, 0);
+					for (int j = 0; j < 5; j++)
+					{
+						Eigen::Vector3d tmp(laserCloudSurfFromMap->points[pointSearchInd[j]].x,
+											laserCloudSurfFromMap->points[pointSearchInd[j]].y,
+											laserCloudSurfFromMap->points[pointSearchInd[j]].z);
+						center = center + tmp;
+					}
+					center = center / 5.0;	
+					Eigen::Vector3d curr_point(pointOri.x, pointOri.y, pointOri.z);
+					ceres::CostFunction *cost_function = LidarDistanceFactor::Create(curr_point, center);
+					problem.AddResidualBlock(cost_function, loss_function, parameters, parameters + 4);
+				}
+				*/
+			}
+
+			////printf("corner num %d used corner num %d \n", laserCloudCornerStackNum, corner_num);
+			////printf("surf num %d used surf num %d \n", laserCloudSurfStackNum, surf_num);
+
+			//printf("mapping data assosiation time %f ms \n", t_data.toc());
+
+			// TicToc t_solver;
+			ceres::Solver::Options options;
+			options.linear_solver_type = ceres::DENSE_QR;
+			options.max_num_iterations = 4;
+			options.minimizer_progress_to_stdout = false;
+			options.check_gradients = false;
+			options.gradient_check_relative_precision = 1e-4;
+			ceres::Solver::Summary summary;
+			ceres::Solve(options, &problem, &summary);
+			//printf("mapping solver time %f ms \n", t_solver.toc());
+
+			////printf("time %f \n", timeLaserOdometry);
+			////printf("corner factor num %d surf factor num %d\n", corner_num, surf_num);
+			////printf("result q %f %f %f %f result t %f %f %f\n", parameters[3], parameters[0], parameters[1], parameters[2],
+			//	   parameters[4], parameters[5], parameters[6]);
+		}
+				//printf("mapping optimization time %f \n", t_opt.toc());
+	}
+	else
+	{
+		ROS_WARN("time Map corner and surf num are not enough");
+	}	
 }
 
 
@@ -410,4 +588,25 @@ void LaserMapping::DownSize()
 		downSizeFilterSurf.filter(*tmpSurf);
 		laserCloudSurfArray[ind] = tmpSurf;
 	}
+}
+
+// Visualize////
+
+//////////////////////
+
+
+void LaserMapping::transform()
+{
+	static tf::TransformBroadcaster br;
+	tf::Transform transform;
+	tf::Quaternion q;
+	transform.setOrigin(tf::Vector3(t_w_curr(0),
+									t_w_curr(1),
+									t_w_curr(2)));
+	q.setW(q_w_curr.w());
+	q.setX(q_w_curr.x());
+	q.setY(q_w_curr.y());
+	q.setZ(q_w_curr.z());
+	transform.setRotation(q);
+	br.sendTransform(tf::StampedTransform(transform, odomAftMapped.header.stamp, "/camera_init", "/aft_mapped"));	
 }

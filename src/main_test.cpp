@@ -109,7 +109,7 @@ int main(int argc, char** argv)
         LaserMapping.DownSizeFiltering();
 
         /// optimize /////
-
+        LaserMapping.OptimizePose();
         //////////////////
 
         LaserMapping.transformUpdate();
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
 
 
         // tf
-
+        LaserMapping.transform();
 
         LidarFrameNum++;
     }

@@ -11,6 +11,9 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/kdtree_flann.h>
 
+#include <tf/transform_datatypes.h>
+#include <tf/transform_broadcaster.h>
+
 #include <mutex>
 #include <queue>
 
@@ -56,12 +59,16 @@ public:
 	void DownSizeFiltering();
 
 	// optimize ////
+	void OptimizePose();
 	///////////////
 
 	void pupu();
 	void DownSize();
 
+	// Visualize //
+	//////////////
 
+	void transform();
 
 
 

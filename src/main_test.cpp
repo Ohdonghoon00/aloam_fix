@@ -36,13 +36,17 @@ LaserMapping LaserMapping;
 int main(int argc, char** argv)
 {
 
+    ros::init(argc, argv, "main");
+    ros::NodeHandle nh("~");
+    std::string data_dir;
+    nh.getParam("data_dir", data_dir);
     // ros::Publisher pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2>("/velodyne_points", 2);
 
     // ros::Publisher pubVIOodometry = nh.advertise<nav_msgs::Odometry>("/VIO_odom_to_init", 100);
     // ros::Publisher pubVIOPath = nh.advertise<nav_msgs::Path>("/VIO_odom_path", 100);
     // nav_msgs::Path VIOPath;    
     
-    std::string data_dir = argv[1];
+    // std::string data_dir = argv[1];
     
     ///////////// VIO pose data /////////////
     std::cout << " Load VIO Data ... " << std::endl;

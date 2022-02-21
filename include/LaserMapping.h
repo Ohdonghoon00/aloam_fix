@@ -80,7 +80,8 @@ public:
 	void VisualizePose(	const ros::Publisher &pubMappingOdom, 
 						const ros::Publisher &pubMappingPath, 
 						nav_msgs::Path &MappingPath, 
-						const ros::Time &timestamp);
+						const ros::Time &timestamp,
+						std::ofstream &MappingPoseFile);
 	//////////////
 
 	void transform(const ros::Time &timestamp);

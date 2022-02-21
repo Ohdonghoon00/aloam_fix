@@ -615,7 +615,8 @@ void LaserMapping::VisualizePointCloud(const ros::Publisher &publisher, const ro
 void LaserMapping::VisualizePose(	const ros::Publisher &pubMappingOdom, 
 									const ros::Publisher &pubMappingPath, 
 									nav_msgs::Path &MappingPath, 
-									const ros::Time &timestamp)
+									const ros::Time &timestamp,
+									std::ofstream &MappingPoseFile)
 {
         // publish odometry
         nav_msgs::Odometry VIOodometry;
@@ -645,6 +646,12 @@ void LaserMapping::VisualizePose(	const ros::Publisher &pubMappingOdom,
         MappingPath.poses.push_back(VIOPose);
         MappingPath.header.frame_id = "/camera_init";
         pubMappingPath.publish(MappingPath);
+
+
+		Vector6d CurrPose = To6DOF(q_w_curr, t_w_curr);
+		MappingPoseFile << CurrPose[0] << " " << CurrPose[1] << " " << CurrPose[2] << " " << CurrPose[3] << " " << CurrPose[4] << " " << CurrPose[5] << std::endl;
+		std::cout << " Mapping Pose !!!! " << std::endl;
+		std::cout << CurrPose[0] << " " << CurrPose[1] << " " << CurrPose[2] << " " << CurrPose[3] << " " << CurrPose[4] << " " << CurrPose[5] << std::endl;
 }
 //////////////////////
 

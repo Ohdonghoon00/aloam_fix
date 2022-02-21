@@ -37,15 +37,22 @@ int main(int argc, char** argv)
 {
 
     ros::init(argc, argv, "main_test");
-    ros::NodeHandle nh("~");
-    std::string data_dir = "/home/multipleye/Dataset/201014_skt_lobby_day_lidar/";
-    // nh.getParam("data_dir", data_dir);
-    ros::Publisher pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2>("/velodyne_points", 2);
+    ros::NodeHandle nh;
+    // std::string data_dir = "/home/multipleye/Dataset/201014_skt_lobby_day_lidar/";
+    std::string data_dir, result_dir;
+    nh.getParam("data_dir", data_dir);
+    nh.getParam("result_dir", result_dir);
 
+    // for visualize
+    ros::Publisher pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2>("/velodyne_points", 2);
     ros::Publisher pubVIOodometry = nh.advertise<nav_msgs::Odometry>("/mapping_Odom", 100);
     ros::Publisher pubVIOPath = nh.advertise<nav_msgs::Path>("/aft_mapped_path", 100);
     nav_msgs::Path VIOPath;    
-    
+
+    // Save Mapping Pose
+    std::ofstream MappingPoseFile;
+    MappingPoseFile.open(result_dir);
+
     // std::string data_dir = argv[1];
     
     ///////////// VIO pose data /////////////
@@ -68,7 +75,7 @@ int main(int argc, char** argv)
     size_t LidarFrameNum = 0;
     while(LidarFrameNum < DB.LidarPoints.size() && ros::ok()){
 
-        std::cout << " LidarFrame Num : " << LidarFrameNum << " @@@@@@@@@@ " << std::endl;
+        std::cout << " LidarFrame Num : " << LidarFrameNum << " @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ " << std::endl;
         //////////////////// Scan Registration ///////////////////////
         
         std::vector<Eigen::Vector3d> TotalPointCloud = Mat3XdToVec3d(DB.LidarPoints[LidarFrameNum]);
@@ -126,7 +133,7 @@ int main(int argc, char** argv)
         if (LidarFrameNum % 20 == 0)
             LaserMapping.VisualizePointCloud(pubLaserCloud, timestampNow);
 			
-        LaserMapping.VisualizePose(pubVIOodometry, pubVIOPath, VIOPath, timestampNow);
+        LaserMapping.VisualizePose(pubVIOodometry, pubVIOPath, VIOPath, timestampNow, MappingPoseFile);
 
 
 

@@ -18,8 +18,8 @@ public:
     {}
 
     // Sort
-    bool comp(int i, int j){ return (cloudCurvature[i]<cloudCurvature[j]); }
-    bool SameLeaf(int i, int j){ return (LeafIds[i] < LeafIds[j]); }
+    static bool comp(int i, int j){ return (cloudCurvature[i]<cloudCurvature[j]); }
+    static bool SameLeaf(int i, int j){ return (LeafIds[i] < LeafIds[j]); }
 
     // DownsizeFiltering
     void getMinMax(std::vector< Eigen::Vector3d > &inCloud, Eigen::Vector3d &minp, Eigen::Vector3d &maxp);
@@ -51,7 +51,7 @@ public:
     std::vector<int> scanStartInd = std::vector<int>(N_SCANS, 0);
     std::vector<int> scanEndInd = std::vector<int>(N_SCANS, 0);
 
-    float cloudCurvature[400000];
+    inline static float cloudCurvature[400000];
     int cloudSortInd[400000];
     int cloudNeighborPicked[400000];
     int cloudLabel[400000];
@@ -63,7 +63,7 @@ public:
     std::vector<Eigen::Vector3d> laserCloud;
 
     // downsize leaf
-    std::vector<int> LeafIds;
+    inline static std::vector<int> LeafIds;
 
     float VerticalAngelRatio = 0;
     const size_t kMaxNumberOfPoints = 1e5;
@@ -74,6 +74,7 @@ public:
 
 };
 
-
+// bool comp(int i, int j){ return (ScanRegistration::cloudCurvature[i]<ScanRegistration::cloudCurvature[j]); }
+// bool SameLeaf(int i, int j){ return (ScanRegistration::LeafIds[i] < ScanRegistration::LeafIds[j]); }
 
 

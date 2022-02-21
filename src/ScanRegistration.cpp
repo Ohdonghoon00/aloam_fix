@@ -47,7 +47,7 @@ void ScanRegistration::DownSizeFiltering(Eigen::Vector3d &LeafSize, std::vector<
 
     }
     
-    // std::sort(LeafInd.begin(), LeafInd.end(), SameLeaf);
+    std::sort(LeafInd.begin(), LeafInd.end(), ScanRegistration::SameLeaf);
     
     for(size_t cp = 0; cp < InCloud.size();){
         Eigen::Vector3d Centroid(InCloud[LeafInd[cp]].x(), InCloud[LeafInd[cp]].y(), InCloud[LeafInd[cp]].z());
@@ -286,7 +286,7 @@ void ScanRegistration::DividePointsByEdgeAndPlanePoints()
             int sp = scanStartInd[i] + (scanEndInd[i] - scanStartInd[i]) * j / 6; 
             int ep = scanStartInd[i] + (scanEndInd[i] - scanStartInd[i]) * (j + 1) / 6 - 1;
 
-            // std::sort (cloudSortInd + sp, cloudSortInd + ep + 1, comp);
+            std::sort (cloudSortInd + sp, cloudSortInd + ep + 1, ScanRegistration::comp);
 
             // Edge Points
             int largestPickedNum = 0;

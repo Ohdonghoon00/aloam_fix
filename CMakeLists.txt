@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(aloam)
+project(fix_aloam)
 
 set(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_CXX_STANDARD 17)
@@ -40,16 +40,16 @@ catkin_package(
 )
 
 add_library(aloam_library
-PublishLidarData.cpp 
-ScanRegistration.cpp
-LaserMapping.cpp
-utils.cpp)
+src/PublishLidarData.cpp 
+src/ScanRegistration.cpp
+src/LaserMapping.cpp
+src/utils.cpp)
 
 target_link_libraries(aloam_library glog ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES})
 
-set(OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/build)
+# set(OUTPUT_DIR ${CMAKE_CURRENT_LIST_DIR}/build)
 
-add_executable(main_test main_test.cpp)
+add_executable(main_test src/main_test.cpp)
 target_link_libraries(main_test glog ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} aloam_library)
 
-set_target_properties(main_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})
+# set_target_properties(main_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_DIR})

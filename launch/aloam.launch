@@ -1,14 +1,14 @@
 <launch>
     
+    <param name="data_dir" type="string" value="/home/multipleye/Dataset/201014_skt_lobby_day_lidar/" />
 
     <!-- nodes -->
     <node pkg="fix_aloam" type="main_test" name="main_test" output="screen" />
-        <param name="data_dir" type="string" value="/home/multipleye/Dataset/201014_skt_lobby_day_lidar/" />
 
     <!-- visulaization -->
     <arg name="rviz" default="true" />
     <group if="$(arg rviz)">
-        <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find aloam)/rviz/aloam.rviz" />
+        <node launch-prefix="nice" pkg="rviz" type="rviz" name="rviz" args="-d $(find fix_aloam)/rviz/aloam.rviz" />
     </group>
 
 </launch>

@@ -2,7 +2,7 @@
 
 #include "common.h"
 #include "utils.h"
-#include "../lidarFactor.hpp"
+#include "../src/lidarFactor.hpp"
 #include "ScanRegistration.h"
 
 #include <pcl_conversions/pcl_conversions.h>
@@ -10,6 +10,10 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/kdtree/kdtree_flann.h>
+
+#include <nav_msgs/Odometry.h>
+#include <nav_msgs/Path.h>
+#include <ros/ros.h>
 
 #include <tf/transform_datatypes.h>
 #include <tf/transform_broadcaster.h>
@@ -41,6 +45,12 @@ public:
 
 		laserCloudCornerStack.reset(new pcl::PointCloud<PointType>());
 		laserCloudSurfStack.reset(new pcl::PointCloud<PointType>());
+
+		for (int i = 0; i < laserCloudNum; i++)
+		{
+			laserCloudCornerArray[i].reset(new pcl::PointCloud<PointType>());
+			laserCloudSurfArray[i].reset(new pcl::PointCloud<PointType>());
+		}
 		
 	}
 
@@ -54,7 +64,7 @@ public:
 	void pointAssociateToMap(PointType const *const pi, PointType *const po);
 	void pointAssociateTobeMapped(PointType const *const pi, PointType *const po);
 
-	void hoho();
+	void CenterCube();
 	void SaveLastMap();
 	void DownSizeFiltering();
 
@@ -62,13 +72,18 @@ public:
 	void OptimizePose();
 	///////////////
 
-	void pupu();
+	void Cube();
 	void DownSize();
 
 	// Visualize //
+	void VisualizePointCloud(const ros::Publisher &publisher, const ros::Time &timestamp);
+	void VisualizePose(	const ros::Publisher &pubMappingOdom, 
+						const ros::Publisher &pubMappingPath, 
+						nav_msgs::Path &MappingPath, 
+						const ros::Time &timestamp);
 	//////////////
 
-	void transform();
+	void transform(const ros::Time &timestamp);
 
 
 

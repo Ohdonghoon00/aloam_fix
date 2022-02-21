@@ -36,22 +36,22 @@ LaserMapping LaserMapping;
 int main(int argc, char** argv)
 {
 
-    ros::init(argc, argv, "main");
+    ros::init(argc, argv, "main_test");
     ros::NodeHandle nh("~");
-    std::string data_dir;
-    nh.getParam("data_dir", data_dir);
-    // ros::Publisher pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2>("/velodyne_points", 2);
+    std::string data_dir = "/home/multipleye/Dataset/201014_skt_lobby_day_lidar/";
+    // nh.getParam("data_dir", data_dir);
+    ros::Publisher pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2>("/velodyne_points", 2);
 
-    // ros::Publisher pubVIOodometry = nh.advertise<nav_msgs::Odometry>("/VIO_odom_to_init", 100);
-    // ros::Publisher pubVIOPath = nh.advertise<nav_msgs::Path>("/VIO_odom_path", 100);
-    // nav_msgs::Path VIOPath;    
+    ros::Publisher pubVIOodometry = nh.advertise<nav_msgs::Odometry>("/mapping_Odom", 100);
+    ros::Publisher pubVIOPath = nh.advertise<nav_msgs::Path>("/aft_mapped_path", 100);
+    nav_msgs::Path VIOPath;    
     
     // std::string data_dir = argv[1];
     
     ///////////// VIO pose data /////////////
     std::cout << " Load VIO Data ... " << std::endl;
     std::string VIOPoses_lidarframes = data_dir + "VIOLidarPoses_lidarframes.txt";
-
+    std::cout <<VIOPoses_lidarframes << std::endl;
     ReadVIOdata(VIOPoses_lidarframes, &DB);
 
     //////////// Undistortion Points ////////////////
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 
 
     size_t LidarFrameNum = 0;
-    while(LidarFrameNum < DB.LidarPoints.size()){
+    while(LidarFrameNum < DB.LidarPoints.size() && ros::ok()){
 
         std::cout << " LidarFrame Num : " << LidarFrameNum << " @@@@@@@@@@ " << std::endl;
         //////////////////// Scan Registration ///////////////////////
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
         LaserMapping.LoadOdomData(DB.VIOLidarPoses[LidarFrameNum]);
         LaserMapping.transformAssociateToMap();
 
-        LaserMapping.hoho();
+        LaserMapping.CenterCube();
         LaserMapping.SaveLastMap();
         LaserMapping.DownSizeFiltering();
 
@@ -117,15 +117,21 @@ int main(int argc, char** argv)
         //////////////////
 
         LaserMapping.transformUpdate();
-        LaserMapping.pupu();
+        LaserMapping.Cube();
         LaserMapping.DownSize();
 
 
         // Visuzlize
+        ros::Time timestampNow = ros::Time::now();
+        if (LidarFrameNum % 20 == 0)
+            LaserMapping.VisualizePointCloud(pubLaserCloud, timestampNow);
+			
+        LaserMapping.VisualizePose(pubVIOodometry, pubVIOPath, VIOPath, timestampNow);
+
 
 
         // tf
-        LaserMapping.transform();
+        LaserMapping.transform(timestampNow);
 
         LidarFrameNum++;
     }

@@ -1,10 +1,14 @@
 #include "LaserMapping.h"
 #include "ScanRegistration.h"
 #include "common.h"
+#include "utils.h"
+
+
 
 
 void LaserMapping::Topcl(ScanRegistration S)
 {
+	laserCloudSurfLast->clear();
 	pcl::PointCloud<PointType> surfPoints;
 	for(auto i : S.surfPointsFlat){
 		PointType point;
@@ -15,6 +19,7 @@ void LaserMapping::Topcl(ScanRegistration S)
 	}
 	*laserCloudSurfLast += surfPoints;
 	
+	laserCloudCornerLast->clear();
 	pcl::PointCloud<PointType> cornerPoints;
 	for(auto i : S.cornerPointsSharp){
 		PointType point;
@@ -24,7 +29,8 @@ void LaserMapping::Topcl(ScanRegistration S)
 		cornerPoints.push_back(point);
 	}
 	*laserCloudCornerLast += cornerPoints;
-
+	
+	laserCloudFullRes->clear();
 	pcl::PointCloud<PointType> fullPoints;
 	for(auto i : S.laserCloud){
 		PointType point;
@@ -83,7 +89,7 @@ void LaserMapping::pointAssociateTobeMapped(PointType const *const pi, PointType
 }
 
 
-void LaserMapping::hoho()
+void LaserMapping::CenterCube()
 {
 			int centerCubeI = int((t_w_curr.x() + 25.0) / 50.0) + laserCloudCenWidth;
 			int centerCubeJ = int((t_w_curr.y() + 25.0) / 50.0) + laserCloudCenHeight;
@@ -521,7 +527,7 @@ void LaserMapping::OptimizePose()
 
 /////////////////
 
-void LaserMapping::pupu()
+void LaserMapping::Cube()
 {
 	for (int i = 0; i < laserCloudCornerStackNum; i++)
 	{
@@ -591,11 +597,59 @@ void LaserMapping::DownSize()
 }
 
 // Visualize////
+void LaserMapping::VisualizePointCloud(const ros::Publisher &publisher, const ros::Time &timestamp)
+{
+	pcl::PointCloud<PointType> laserCloudMap;
+	for (int i = 0; i < 4851; i++)
+	{
+		laserCloudMap += *laserCloudCornerArray[i];
+		laserCloudMap += *laserCloudSurfArray[i];
+	}
+	sensor_msgs::PointCloud2 laserCloudMsg;
+	pcl::toROSMsg(laserCloudMap, laserCloudMsg);
+	laserCloudMsg.header.stamp = timestamp;
+	laserCloudMsg.header.frame_id = "/camera_init";
+	publisher.publish(laserCloudMsg);	
+}
 
+void LaserMapping::VisualizePose(	const ros::Publisher &pubMappingOdom, 
+									const ros::Publisher &pubMappingPath, 
+									nav_msgs::Path &MappingPath, 
+									const ros::Time &timestamp)
+{
+        // publish odometry
+        nav_msgs::Odometry VIOodometry;
+        VIOodometry.header.frame_id = "/camera_init";
+        VIOodometry.child_frame_id = "/laser_odom";
+        VIOodometry.header.stamp = timestamp;
+        // VIOodometry.pose.pose.orientation.x = q.x();
+        // VIOodometry.pose.pose.orientation.y = q.y();
+        // VIOodometry.pose.pose.orientation.z = q.z();
+        // VIOodometry.pose.pose.orientation.w = q.w();
+        // VIOodometry.pose.pose.position.x = p.x();
+        // VIOodometry.pose.pose.position.y = p.y();
+        // VIOodometry.pose.pose.position.z = p.z();
+        VIOodometry.pose.pose.orientation.x = q_w_curr.x();
+        VIOodometry.pose.pose.orientation.y = q_w_curr.y();
+        VIOodometry.pose.pose.orientation.z = q_w_curr.z();
+        VIOodometry.pose.pose.orientation.w = q_w_curr.w();
+        VIOodometry.pose.pose.position.x = t_w_curr.x();
+        VIOodometry.pose.pose.position.y = t_w_curr.y();
+        VIOodometry.pose.pose.position.z = t_w_curr.z();
+        pubMappingOdom.publish(VIOodometry);
+
+        geometry_msgs::PoseStamped VIOPose;
+        VIOPose.header = VIOodometry.header;
+        VIOPose.pose = VIOodometry.pose.pose;
+        MappingPath.header.stamp = timestamp;
+        MappingPath.poses.push_back(VIOPose);
+        MappingPath.header.frame_id = "/camera_init";
+        pubMappingPath.publish(MappingPath);
+}
 //////////////////////
 
 
-void LaserMapping::transform()
+void LaserMapping::transform(const ros::Time &timestamp)
 {
 	static tf::TransformBroadcaster br;
 	tf::Transform transform;
@@ -608,5 +662,5 @@ void LaserMapping::transform()
 	q.setY(q_w_curr.y());
 	q.setZ(q_w_curr.z());
 	transform.setRotation(q);
-	br.sendTransform(tf::StampedTransform(transform, odomAftMapped.header.stamp, "/camera_init", "/aft_mapped"));	
+	br.sendTransform(tf::StampedTransform(transform, timestamp, "/camera_init", "/aft_mapped"));	
 }

@@ -334,7 +334,10 @@ void LaserMapping::DownSizeFiltering()
 
 
 ////optimize/////
-
+void LaserMapping::Optimize()
+{
+	
+}
 
 
 

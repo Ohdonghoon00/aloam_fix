@@ -6,7 +6,7 @@
 
 
 
-void LaserMapping::Topcl(ScanRegistration S)
+void LaserMapping::topcl(ScanRegistration S)
 {
 	laserCloudSurfLast->clear();
 	pcl::PointCloud<PointType> surfPoints;
@@ -42,7 +42,7 @@ void LaserMapping::Topcl(ScanRegistration S)
 	*laserCloudFullRes += fullPoints;
 }
 
-void LaserMapping::LoadOdomData(Vector6d pose)
+void LaserMapping::loadOdomData(Vector6d pose)
 {
 	Eigen::Quaterniond q = ToQuaternion(pose);
 	q_wodom_curr.x() = q.x();
@@ -89,7 +89,7 @@ void LaserMapping::pointAssociateTobeMapped(PointType const *const pi, PointType
 }
 
 
-void LaserMapping::CenterCube()
+void LaserMapping::getSurroundPointsfromCube()
 {
 			int centerCubeI = int((t_w_curr.x() + 25.0) / 50.0) + laserCloudCenWidth;
 			int centerCubeJ = int((t_w_curr.y() + 25.0) / 50.0) + laserCloudCenHeight;
@@ -157,6 +157,7 @@ void LaserMapping::CenterCube()
 							laserCloudCubeSurfPointer;
 						laserCloudCubeCornerPointer->clear();
 						laserCloudCubeSurfPointer->clear();
+					
 					}
 				}
 
@@ -188,6 +189,7 @@ void LaserMapping::CenterCube()
 							laserCloudCubeSurfPointer;
 						laserCloudCubeCornerPointer->clear();
 						laserCloudCubeSurfPointer->clear();
+					
 					}
 				}
 
@@ -219,6 +221,7 @@ void LaserMapping::CenterCube()
 							laserCloudCubeSurfPointer;
 						laserCloudCubeCornerPointer->clear();
 						laserCloudCubeSurfPointer->clear();
+					
 					}
 				}
 
@@ -311,7 +314,7 @@ void LaserMapping::CenterCube()
 			}	
 }
 
-void LaserMapping::SaveLastMap()
+void LaserMapping::surroundPoints2Map()
 {
 	laserCloudCornerFromMap->clear();
 	laserCloudSurfFromMap->clear();
@@ -324,15 +327,13 @@ void LaserMapping::SaveLastMap()
 	laserCloudSurfFromMapNum = laserCloudSurfFromMap->points.size();	
 }
 
-void LaserMapping::DownSizeFiltering()
+void LaserMapping::downSizeCurrentScan()
 {
-	// pcl::PointCloud<PointType>::Ptr laserCloudCornerStack(new pcl::PointCloud<PointType>());
-	// laserCloudCornerStack  clear()?
+
 	downSizeFilterCorner.setInputCloud(laserCloudCornerLast);
 	downSizeFilterCorner.filter(*laserCloudCornerStack);
 	laserCloudCornerStackNum = laserCloudCornerStack->points.size();
 
-	// pcl::PointCloud<PointType>::Ptr laserCloudSurfStack(new pcl::PointCloud<PointType>());
 	downSizeFilterSurf.setInputCloud(laserCloudSurfLast);
 	downSizeFilterSurf.filter(*laserCloudSurfStack);
 	laserCloudSurfStackNum = laserCloudSurfStack->points.size();	
@@ -340,13 +341,19 @@ void LaserMapping::DownSizeFiltering()
 
 
 ////optimize/////
-void LaserMapping::OptimizePose()
+void LaserMapping::optimizePose()
 {
 	if (laserCloudCornerFromMapNum > 10 && laserCloudSurfFromMapNum > 50)
 	{
 
-		kdtreeCornerFromMap->setInputCloud(laserCloudCornerFromMap);
-		kdtreeSurfFromMap->setInputCloud(laserCloudSurfFromMap);
+			// original
+			// kdtreeCornerFromMap->setInputCloud(laserCloudCornerFromMap);
+			// kdtreeSurfFromMap->setInputCloud(laserCloudSurfFromMap);
+		
+			// test
+			kdtreeCornerFromMap->setInputCloud(nearCornerMap);
+			kdtreeSurfFromMap->setInputCloud(nearSurfMap);
+		
 		//printf("build tree time %f ms \n", t_tree.toc());
 
 		for (int iterCount = 0; iterCount < 2; iterCount++)
@@ -377,13 +384,26 @@ void LaserMapping::OptimizePose()
 					Eigen::Vector3d center(0, 0, 0);
 					for (int j = 0; j < 5; j++)
 					{
-						Eigen::Vector3d tmp(laserCloudCornerFromMap->points[pointSearchInd[j]].x,
-											laserCloudCornerFromMap->points[pointSearchInd[j]].y,
-											laserCloudCornerFromMap->points[pointSearchInd[j]].z);
+						///// original //////
+						// Eigen::Vector3d tmp(laserCloudCornerFromMap->points[pointSearchInd[j]].x,
+						// 					laserCloudCornerFromMap->points[pointSearchInd[j]].y,
+						// 					laserCloudCornerFromMap->points[pointSearchInd[j]].z);
+						
+						////// test ////////
+						Eigen::Vector3d tmp(nearCornerMap->points[pointSearchInd[j]].x,
+											nearCornerMap->points[pointSearchInd[j]].y,
+											nearCornerMap->points[pointSearchInd[j]].z);
 						center = center + tmp;
 						nearCorners.push_back(tmp);
 					}
 					center = center / 5.0;
+						
+						
+						
+
+						
+
+						
 
 					Eigen::Matrix3d covMat = Eigen::Matrix3d::Zero();
 					for (int j = 0; j < 5; j++)
@@ -444,9 +464,15 @@ void LaserMapping::OptimizePose()
 							
 					for (int j = 0; j < 5; j++)
 					{
-						matA0(j, 0) = laserCloudSurfFromMap->points[pointSearchInd[j]].x;
-						matA0(j, 1) = laserCloudSurfFromMap->points[pointSearchInd[j]].y;
-						matA0(j, 2) = laserCloudSurfFromMap->points[pointSearchInd[j]].z;
+						///// original ////
+						// matA0(j, 0) = laserCloudSurfFromMap->points[pointSearchInd[j]].x;
+						// matA0(j, 1) = laserCloudSurfFromMap->points[pointSearchInd[j]].y;
+						// matA0(j, 2) = laserCloudSurfFromMap->points[pointSearchInd[j]].z;
+						
+						/////// test //////
+						matA0(j, 0) = nearSurfMap->points[pointSearchInd[j]].x;
+						matA0(j, 1) = nearSurfMap->points[pointSearchInd[j]].y;
+						matA0(j, 2) = nearSurfMap->points[pointSearchInd[j]].z;
 						////printf(" pts %f %f %f ", matA0(j, 0), matA0(j, 1), matA0(j, 2));
 					}
 					// find the norm of plane
@@ -459,9 +485,14 @@ void LaserMapping::OptimizePose()
 					for (int j = 0; j < 5; j++)
 					{
 						// if OX * n > 0.2, then plane is not fit well
-						if (fabs(norm(0) * laserCloudSurfFromMap->points[pointSearchInd[j]].x +
-								norm(1) * laserCloudSurfFromMap->points[pointSearchInd[j]].y +
-								norm(2) * laserCloudSurfFromMap->points[pointSearchInd[j]].z + negative_OA_dot_norm) > 0.2)
+						// if (fabs(norm(0) * laserCloudSurfFromMap->points[pointSearchInd[j]].x +
+						// 		norm(1) * laserCloudSurfFromMap->points[pointSearchInd[j]].y +
+						// 		norm(2) * laserCloudSurfFromMap->points[pointSearchInd[j]].z + negative_OA_dot_norm) > 0.2)
+						
+						//////// test ////////
+						if (fabs(norm(0) * nearSurfMap->points[pointSearchInd[j]].x +
+								norm(1) * nearSurfMap->points[pointSearchInd[j]].y +
+								norm(2) * nearSurfMap->points[pointSearchInd[j]].z + negative_OA_dot_norm) > 0.2)
 						{
 							planeValid = false;
 							break;
@@ -525,9 +556,9 @@ void LaserMapping::OptimizePose()
 
 
 
-/////////////////
+///////////////// 
 
-void LaserMapping::Cube()
+void LaserMapping::currentScanToCube()
 {
 	for (int i = 0; i < laserCloudCornerStackNum; i++)
 	{
@@ -578,7 +609,7 @@ void LaserMapping::Cube()
 	}
 }
 
-void LaserMapping::DownSize()
+void LaserMapping::surroundMapDownSize()
 {
 	for (int i = 0; i < laserCloudValidNum; i++)
 	{
@@ -596,7 +627,88 @@ void LaserMapping::DownSize()
 	}
 }
 
-// Visualize////
+//////////////// Test /////////////////////////
+
+void LaserMapping::recentScan2Map()
+{
+	nearCornerMap->clear();
+	for(int i = 0; i < mapScanNum; i ++)
+		*nearCornerMap += *scanCornerMapArray[i];	
+	
+	nearSurfMap->clear();
+	for(int i = 0; i < mapScanNum; i ++)
+		*nearSurfMap += *scanSurfMapArray[i];
+
+	laserCloudCornerFromMapNum = nearCornerMap->points.size();
+	laserCloudSurfFromMapNum = nearSurfMap->points.size();	
+}
+
+void LaserMapping::SetRecentlyMap()
+{
+	// corner
+	for(int i = 0; i < mapScanNum - 1; i++){
+		
+		scanCornerMapArray[i]->clear();
+		*scanCornerMapArray[i] = *scanCornerMapArray[i + 1];
+		
+		scanSurfMapArray[i]->clear();
+		*scanSurfMapArray[i] = *scanSurfMapArray[i + 1];
+	}
+
+	scanCornerMapArray[mapScanNum - 1]->clear();
+	for(int i = 0; i < laserCloudCornerStackNum; i++){
+		pointAssociateToMap(&laserCloudCornerStack->points[i], &pointSel);
+		scanCornerMapArray[mapScanNum - 1]->push_back(pointSel);
+	}
+
+	scanSurfMapArray[mapScanNum - 1]->clear();
+	for(int i = 0; i < laserCloudSurfStackNum; i++){
+		pointAssociateToMap(&laserCloudSurfStack->points[i], &pointSel);
+		scanSurfMapArray[mapScanNum - 1]->push_back(pointSel);
+	}
+}
+	
+void LaserMapping::RecentlyMapDownSize()
+{
+	for (int i = 0; i < mapScanNum; i++)
+	{
+		pcl::PointCloud<PointType>::Ptr tmpCorner(new pcl::PointCloud<PointType>());
+		downSizeFilterCorner.setInputCloud(scanCornerMapArray[i]);
+		downSizeFilterCorner.filter(*tmpCorner);
+		laserCloudCornerArray[i] = tmpCorner;
+
+		pcl::PointCloud<PointType>::Ptr tmpSurf(new pcl::PointCloud<PointType>());
+		downSizeFilterSurf.setInputCloud(scanSurfMapArray[i]);
+		downSizeFilterSurf.filter(*tmpSurf);
+		laserCloudSurfArray[i] = tmpSurf;
+	}	
+}	
+
+void LaserMapping::Visuzlize(const ros::Publisher &publisher, const ros::Time &timestamp)
+{
+	pcl::PointCloud<PointType> laserCloudMap;
+	for (int i = 0; i < mapScanNum; i++)
+	{
+		laserCloudMap += *scanCornerMapArray[i];
+		laserCloudMap += *scanSurfMapArray[i];
+	}
+	sensor_msgs::PointCloud2 laserCloudMsg;
+	pcl::toROSMsg(laserCloudMap, laserCloudMsg);
+	laserCloudMsg.header.stamp = timestamp;
+	laserCloudMsg.header.frame_id = "/camera_init";
+	publisher.publish(laserCloudMsg);		
+}
+
+//////////////////////////////////////////	
+	
+
+
+
+
+
+
+///////// Visualize //////////////////////////////
+
 void LaserMapping::VisualizePointCloud(const ros::Publisher &publisher, const ros::Time &timestamp)
 {
 	pcl::PointCloud<PointType> laserCloudMap;
@@ -605,6 +717,7 @@ void LaserMapping::VisualizePointCloud(const ros::Publisher &publisher, const ro
 		laserCloudMap += *laserCloudCornerArray[i];
 		laserCloudMap += *laserCloudSurfArray[i];
 	}
+
 	sensor_msgs::PointCloud2 laserCloudMsg;
 	pcl::toROSMsg(laserCloudMap, laserCloudMsg);
 	laserCloudMsg.header.stamp = timestamp;
@@ -653,7 +766,37 @@ void LaserMapping::VisualizePose(	const ros::Publisher &pubMappingOdom,
 		std::cout << " Mapping Pose !!!! " << std::endl;
 		std::cout << CurrPose[0] << " " << CurrPose[1] << " " << CurrPose[2] << " " << CurrPose[3] << " " << CurrPose[4] << " " << CurrPose[5] << std::endl;
 }
-//////////////////////
+
+void LaserMapping::VisualizePose(	const ros::Publisher &pubVIOodom, 
+						const ros::Publisher &pubVIOPath, 
+						nav_msgs::Path &VIOPath, 
+						const ros::Time &timestamp,
+						Vector6d pose)
+{
+        // publish odometry
+        nav_msgs::Odometry VIOodometry;
+        VIOodometry.header.frame_id = "/camera_init";
+        VIOodometry.child_frame_id = "/laser_odom";
+        VIOodometry.header.stamp = timestamp;
+		Eigen::Quaterniond q = ToQuaternion(pose);
+        VIOodometry.pose.pose.orientation.x = q.x();
+        VIOodometry.pose.pose.orientation.y = q.y();
+        VIOodometry.pose.pose.orientation.z = q.z();
+        VIOodometry.pose.pose.orientation.w = q.w();
+        VIOodometry.pose.pose.position.x = pose[3];
+        VIOodometry.pose.pose.position.y = pose[4];
+        VIOodometry.pose.pose.position.z = pose[5];
+        pubVIOodom.publish(VIOodometry);
+
+        geometry_msgs::PoseStamped VIOPose;
+        VIOPose.header = VIOodometry.header;
+        VIOPose.pose = VIOodometry.pose.pose;
+        VIOPath.header.stamp = timestamp;
+        VIOPath.poses.push_back(VIOPose);
+        VIOPath.header.frame_id = "/camera_init";
+        pubVIOPath.publish(VIOPath);	
+}
+////////////////////////////////////////////////////////////////
 
 
 void LaserMapping::transform(const ros::Time &timestamp)

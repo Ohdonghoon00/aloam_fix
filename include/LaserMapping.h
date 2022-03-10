@@ -51,29 +51,39 @@ public:
 			laserCloudCornerArray[i].reset(new pcl::PointCloud<PointType>());
 			laserCloudSurfArray[i].reset(new pcl::PointCloud<PointType>());
 		}
+
+		nearCornerMap.reset(new pcl::PointCloud<PointType>());
+		nearSurfMap.reset(new pcl::PointCloud<PointType>());
+
+		for(int i = 0; i < mapScanNum; i++){
+			scanCornerMapArray[i].reset(new pcl::PointCloud<PointType>());
+			scanSurfMapArray[i].reset(new pcl::PointCloud<PointType>());
+		}
+
 		
 	}
 
-	void Topcl(ScanRegistration S);
-	void LoadOdomData(Vector6d pose);
+	void topcl(ScanRegistration S);
+	void loadOdomData(Vector6d pose);
 
 	// set initial guess
 	void transformAssociateToMap();
+	
 	void transformUpdate();
-
 	void pointAssociateToMap(PointType const *const pi, PointType *const po);
 	void pointAssociateTobeMapped(PointType const *const pi, PointType *const po);
 
-	void CenterCube();
-	void SaveLastMap();
-	void DownSizeFiltering();
+
+	void getSurroundPointsfromCube();
+	void surroundPoints2Map();
+	void downSizeCurrentScan();
 
 	// optimize ////
-	void OptimizePose();
+	void optimizePose();
 	///////////////
 
-	void Cube();
-	void DownSize();
+	void currentScanToCube();
+	void surroundMapDownSize();
 
 	// Visualize //
 	void VisualizePointCloud(const ros::Publisher &publisher, const ros::Time &timestamp);
@@ -82,11 +92,20 @@ public:
 						nav_msgs::Path &MappingPath, 
 						const ros::Time &timestamp,
 						std::ofstream &MappingPoseFile);
+	void VisualizePose(	const ros::Publisher &pubMappingOdom, 
+						const ros::Publisher &pubMappingPath, 
+						nav_msgs::Path &MappingPath, 
+						const ros::Time &timestamp,
+						Vector6d pose);
 	//////////////
 
 	void transform(const ros::Time &timestamp);
 
-
+	// Test ///////////
+	void recentScan2Map();
+	void SetRecentlyMap();
+	void RecentlyMapDownSize();
+	void Visuzlize(const ros::Publisher &publisher, const ros::Time &timestamp);
 
 
 
@@ -166,5 +185,16 @@ public:
 	pcl::PointCloud<PointType>::Ptr laserCloudCornerStack;
 	pcl::PointCloud<PointType>::Ptr laserCloudSurfStack;
 
+	//////////////// Find Correspondance Points in recent Lidar scan /////////////////
+	
+	const static int mapScanNum = 150;
+
+	//  recently map to current scan   //
+	pcl::PointCloud<PointType>::Ptr nearCornerMap;
+	pcl::PointCloud<PointType>::Ptr nearSurfMap;
+
+	// save points each scan
+	pcl::PointCloud<PointType>::Ptr scanCornerMapArray[mapScanNum];
+	pcl::PointCloud<PointType>::Ptr scanSurfMapArray[mapScanNum];
 
 };

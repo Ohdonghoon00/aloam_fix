@@ -45,8 +45,12 @@ int main(int argc, char** argv)
 
     // for visualize
     ros::Publisher pubLaserCloud = nh.advertise<sensor_msgs::PointCloud2>("/velodyne_points", 2);
-    ros::Publisher pubVIOodometry = nh.advertise<nav_msgs::Odometry>("/mapping_Odom", 100);
-    ros::Publisher pubVIOPath = nh.advertise<nav_msgs::Path>("/aft_mapped_path", 100);
+    ros::Publisher pubMappingPose = nh.advertise<nav_msgs::Odometry>("/mapping_Odom", 100);
+    ros::Publisher pubMappingPath = nh.advertise<nav_msgs::Path>("/aft_mapped_path", 100);
+    nav_msgs::Path mappingPath;
+
+    ros::Publisher pubVIOPose = nh.advertise<nav_msgs::Odometry>("/VIO_Odom", 100);
+    ros::Publisher pubVIOPath = nh.advertise<nav_msgs::Path>("/VIO_path", 100);
     nav_msgs::Path VIOPath;    
 
     // Save Mapping Pose
@@ -111,30 +115,46 @@ int main(int argc, char** argv)
 
         ///////////////////// Laser Mapping ////////////////////////////
         
-        LaserMapping.Topcl(ScanRegistration);
-        LaserMapping.LoadOdomData(DB.VIOLidarPoses[LidarFrameNum]);
-        LaserMapping.transformAssociateToMap();
+        LaserMapping.topcl(ScanRegistration);
+        LaserMapping.loadOdomData(DB.VIOLidarPoses[LidarFrameNum]); // get ROVINS VIO pose
+        LaserMapping.transformAssociateToMap(); 
 
-        LaserMapping.CenterCube();
-        LaserMapping.SaveLastMap();
-        LaserMapping.DownSizeFiltering();
+            /////////// original code ///////////
+            
+            // LaserMapping.getSurroundPointsfromCube();
+            // LaserMapping.surroundPoints2Map();
+            // LaserMapping.downSizeCurrentScan();
 
-        /// optimize /////
-        LaserMapping.OptimizePose();
-        //////////////////
+            // LaserMapping.optimizePose();
+            // LaserMapping.transformUpdate();
 
-        LaserMapping.transformUpdate();
-        LaserMapping.Cube();
-        LaserMapping.DownSize();
+            // LaserMapping.currentScanToCube();
+            // LaserMapping.surroundMapDownSize();
 
+            // Visualize
+            ros::Time timestampNow = ros::Time::now();
+            // if (LidarFrameNum % 20 == 0)
+            //     LaserMapping.VisualizePointCloud(pubLaserCloud, timestampNow);
+        
+        
+            ///////////////////// Test /////////////////////////////////
+            LaserMapping.downSizeCurrentScan();
+            LaserMapping.recentScan2Map();
+            
+            LaserMapping.optimizePose();
+            LaserMapping.transformUpdate();
 
-        // Visuzlize
-        ros::Time timestampNow = ros::Time::now();
-        if (LidarFrameNum % 20 == 0)
-            LaserMapping.VisualizePointCloud(pubLaserCloud, timestampNow);
-			
-        LaserMapping.VisualizePose(pubVIOodometry, pubVIOPath, VIOPath, timestampNow, MappingPoseFile);
+            LaserMapping.SetRecentlyMap();
+            LaserMapping.RecentlyMapDownSize();
+    
+            // Visualize
+            LaserMapping.Visuzlize(pubLaserCloud, timestampNow);	
 
+            /////////////////////////////////////////////////////////////
+
+        
+        LaserMapping.VisualizePose(pubMappingPose, pubMappingPath, mappingPath, timestampNow, MappingPoseFile);
+        LaserMapping.VisualizePose(pubVIOPose, pubVIOPath, VIOPath, timestampNow, DB.VIOLidarPoses[LidarFrameNum]);
 
 
         // tf

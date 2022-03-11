@@ -86,13 +86,13 @@ public:
 	void surroundMapDownSize();
 
 	// Visualize //
-	void VisualizePointCloud(const ros::Publisher &publisher, const ros::Time &timestamp);
-	void VisualizePose(	const ros::Publisher &pubMappingOdom, 
+	void visualizePointCloud(const ros::Publisher &publisher, const ros::Time &timestamp);
+	void visualizePose(	const ros::Publisher &pubMappingOdom, 
 						const ros::Publisher &pubMappingPath, 
 						nav_msgs::Path &MappingPath, 
 						const ros::Time &timestamp,
 						std::ofstream &MappingPoseFile);
-	void VisualizePose(	const ros::Publisher &pubMappingOdom, 
+	void visualizePose(	const ros::Publisher &pubMappingOdom, 
 						const ros::Publisher &pubMappingPath, 
 						nav_msgs::Path &MappingPath, 
 						const ros::Time &timestamp,
@@ -103,9 +103,9 @@ public:
 
 	// Test ///////////
 	void recentScan2Map();
-	void SetRecentlyMap();
-	void RecentlyMapDownSize();
-	void Visuzlize(const ros::Publisher &publisher, const ros::Time &timestamp);
+	void setRecentlyMap();
+	void recentlyMapDownSize();
+	void visuzlize(const ros::Publisher &publisher, const ros::Time &timestamp);
 
 
 

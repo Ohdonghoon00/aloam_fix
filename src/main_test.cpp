@@ -144,17 +144,17 @@ int main(int argc, char** argv)
             LaserMapping.optimizePose();
             LaserMapping.transformUpdate();
 
-            LaserMapping.SetRecentlyMap();
-            LaserMapping.RecentlyMapDownSize();
+            LaserMapping.setRecentlyMap();
+            LaserMapping.recentlyMapDownSize();
     
             // Visualize
-            LaserMapping.Visuzlize(pubLaserCloud, timestampNow);	
+            LaserMapping.visuzlize(pubLaserCloud, timestampNow);	
 
             /////////////////////////////////////////////////////////////
 
         
-        LaserMapping.VisualizePose(pubMappingPose, pubMappingPath, mappingPath, timestampNow, MappingPoseFile);
-        LaserMapping.VisualizePose(pubVIOPose, pubVIOPath, VIOPath, timestampNow, DB.VIOLidarPoses[LidarFrameNum]);
+        LaserMapping.visualizePose(pubMappingPose, pubMappingPath, mappingPath, timestampNow, MappingPoseFile);
+        LaserMapping.visualizePose(pubVIOPose, pubVIOPath, VIOPath, timestampNow, DB.VIOLidarPoses[LidarFrameNum]);
 
 
         // tf

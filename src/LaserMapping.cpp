@@ -643,7 +643,7 @@ void LaserMapping::recentScan2Map()
 	laserCloudSurfFromMapNum = nearSurfMap->points.size();	
 }
 
-void LaserMapping::SetRecentlyMap()
+void LaserMapping::setRecentlyMap()
 {
 	// corner
 	for(int i = 0; i < mapScanNum - 1; i++){
@@ -668,7 +668,7 @@ void LaserMapping::SetRecentlyMap()
 	}
 }
 	
-void LaserMapping::RecentlyMapDownSize()
+void LaserMapping::recentlyMapDownSize()
 {
 	for (int i = 0; i < mapScanNum; i++)
 	{
@@ -684,7 +684,7 @@ void LaserMapping::RecentlyMapDownSize()
 	}	
 }	
 
-void LaserMapping::Visuzlize(const ros::Publisher &publisher, const ros::Time &timestamp)
+void LaserMapping::visuzlize(const ros::Publisher &publisher, const ros::Time &timestamp)
 {
 	pcl::PointCloud<PointType> laserCloudMap;
 	for (int i = 0; i < mapScanNum; i++)
@@ -709,7 +709,7 @@ void LaserMapping::Visuzlize(const ros::Publisher &publisher, const ros::Time &t
 
 ///////// Visualize //////////////////////////////
 
-void LaserMapping::VisualizePointCloud(const ros::Publisher &publisher, const ros::Time &timestamp)
+void LaserMapping::visualizePointCloud(const ros::Publisher &publisher, const ros::Time &timestamp)
 {
 	pcl::PointCloud<PointType> laserCloudMap;
 	for (int i = 0; i < 4851; i++)
@@ -725,7 +725,7 @@ void LaserMapping::VisualizePointCloud(const ros::Publisher &publisher, const ro
 	publisher.publish(laserCloudMsg);	
 }
 
-void LaserMapping::VisualizePose(	const ros::Publisher &pubMappingOdom, 
+void LaserMapping::visualizePose(	const ros::Publisher &pubMappingOdom, 
 									const ros::Publisher &pubMappingPath, 
 									nav_msgs::Path &MappingPath, 
 									const ros::Time &timestamp,
@@ -767,7 +767,7 @@ void LaserMapping::VisualizePose(	const ros::Publisher &pubMappingOdom,
 		std::cout << CurrPose[0] << " " << CurrPose[1] << " " << CurrPose[2] << " " << CurrPose[3] << " " << CurrPose[4] << " " << CurrPose[5] << std::endl;
 }
 
-void LaserMapping::VisualizePose(	const ros::Publisher &pubVIOodom, 
+void LaserMapping::visualizePose(	const ros::Publisher &pubVIOodom, 
 						const ros::Publisher &pubVIOPath, 
 						nav_msgs::Path &VIOPath, 
 						const ros::Time &timestamp,

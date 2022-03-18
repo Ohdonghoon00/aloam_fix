@@ -121,34 +121,34 @@ int main(int argc, char** argv)
 
             /////////// original code ///////////
             
-            // LaserMapping.getSurroundPointsfromCube();
-            // LaserMapping.surroundPoints2Map();
-            // LaserMapping.downSizeCurrentScan();
-
-            // LaserMapping.optimizePose();
-            // LaserMapping.transformUpdate();
-
-            // LaserMapping.currentScanToCube();
-            // LaserMapping.surroundMapDownSize();
-
-            // Visualize
-            ros::Time timestampNow = ros::Time::now();
-            // if (LidarFrameNum % 20 == 0)
-            //     LaserMapping.VisualizePointCloud(pubLaserCloud, timestampNow);
-        
-        
-            ///////////////////// Test /////////////////////////////////
+            LaserMapping.getSurroundPointsfromCube();
+            LaserMapping.surroundPoints2Map();
             LaserMapping.downSizeCurrentScan();
-            LaserMapping.recentScan2Map();
-            
+
             LaserMapping.optimizePose();
             LaserMapping.transformUpdate();
 
-            LaserMapping.setRecentlyMap();
-            LaserMapping.recentlyMapDownSize();
-    
+            LaserMapping.currentScanToCube();
+            LaserMapping.surroundMapDownSize();
+
             // Visualize
-            LaserMapping.visuzlize(pubLaserCloud, timestampNow);	
+            ros::Time timestampNow = ros::Time::now();
+            if (LidarFrameNum % 20 == 0)
+                LaserMapping.visualizePointCloud(pubLaserCloud, timestampNow);
+        
+        
+            ///////////////////// Test /////////////////////////////////
+            // LaserMapping.downSizeCurrentScan();
+            // LaserMapping.recentScan2Map();
+            
+            // LaserMapping.optimizePose();
+            // LaserMapping.transformUpdate();
+
+            // LaserMapping.setRecentlyMap();
+            // LaserMapping.recentlyMapDownSize();
+    
+            // // Visualize
+            // LaserMapping.visuzlize(pubLaserCloud, timestampNow);	
 
             /////////////////////////////////////////////////////////////
 

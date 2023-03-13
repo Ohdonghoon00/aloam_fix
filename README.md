@@ -47,9 +47,9 @@ Result_DIR
 
 * subscribe node
   * command
-  ```
-  $ ros2 run visual_odometry visualize
-  ```
+    ```
+    $ ros2 run visual_odometry visualize
+    ```
   * input
     * raw_image
   * publish
@@ -58,11 +58,11 @@ Result_DIR
 
 * publish node
   * command 
-  ```
-  $ ros2 run visual_odometry estimate_pose
-  ```
+    ```
+    $ ros2 run visual_odometry estimate_pose
+    ```
 
-  * return
+  * return 예시
     * current raw image
     * ```
       [INFO] [1678693120.469923139] [visualize_node]:  Timestamp : 1678693120 sec

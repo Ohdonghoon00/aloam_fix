@@ -46,13 +46,27 @@ Result_DIR
 이미지를 받아와서 2d structure from motion을 통해 이미지의 포즈를 추정하는 패키지 개발
 
 * subscribe node
- * command
+  * command
 ```
 $ ros2 run visual_odometry visualize
 ```
+  * input
+    * raw_image
+  * publish
+    * raw_image
+    * estimate pose   
 
 * publish node
   * command 
 ```
 $ ros2 run visual_odometry estimate_pose
 ```
+  * subscribe
+    * raw_image
+    * estimate pose
+  * return
+    * current raw image
+    ```
+    [INFO] [1678693120.469923139] [visualize_node]:  Timestamp : 1678693120 sec
+    [INFO] [1678693120.469993015] [visualize_node]:  Camera Pose : 0.006333 -0.057185 -0.001671 -0.706567 -0.177956 16.975463
+    ```

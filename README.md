@@ -42,3 +42,17 @@ Result_DIR
 
 **Result_DIR**
 - launch 폴더내 fix_aloam.launch 파일 result_dir value값 수정
+
+이미지를 받아와서 2d structure from motion을 통해 이미지의 포즈를 추정하는 패키지 개발
+
+- subscribe node
+- command
+```
+$ ros2 run visual_odometry visualize
+```
+
+- publish node
+- command 
+```
+$ ros2 run visual_odometry estimate_pose
+```
